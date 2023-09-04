@@ -2,7 +2,7 @@
   "name": "work-stamp",
   "displayName": "Work Stamp",
   "description": "Keep track of your time while working on a particular project ",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "engines": {
     "vscode": "^1.81.0"
   },
@@ -15,8 +15,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "work-stamp.helloWorld",
-        "title": "Hello World"
+        "command": "work-stamp.stamp-work",
+        "title": "Start/Stop Stamp"
       }
     ]
   },
