@@ -30,6 +30,9 @@ export function saveStampData(
 ): void {
   // TODO: save data to disk
   console.log(`${projectName} is saving...`);
+  console.log(`${s} is saving...`);
+  console.log(`${e} is saving...`);
+  console.log(`${end} is saving...`);
 }
 
 export function formatElapsedTime(milliseconds: number): string {
