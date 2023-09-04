@@ -1,26 +1,88 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import {
+  getCurrentWorkspaceName,
+  formatElapsedTime,
+  saveStampData,
+  getElapsedTime,
+  formatElapsedTimeMsg,
+} from "./utils";
 
-// This method is called when your extension is activated
+let isTimerRunning: boolean = false;
+let startTime: number | null = null;
+let statusBarItem: vscode.StatusBarItem | null = null;
+let intervalId: NodeJS.Timer | null = null;
+const cmdId: string = "work-stamp.stamp-work";
+
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  console.log('Congratulations, your extension "work-stamp" is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "work-stamp" is now active!');
+  // Create status bar item.
+  statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100
+  );
+  statusBarItem.command = cmdId;
+  context.subscriptions.push(statusBarItem);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('work-stamp.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Work Stamp!');
-	});
+  // Register command to start/stop timer
+  const workStamp = vscode.commands.registerCommand(cmdId, () => {
+    if (isTimerRunning) {
+      // Save data ans stop timer
+      const projectName = getCurrentWorkspaceName();
+      if (projectName && startTime) {
+        const endTime = Date.now();
+        const elapsedTime = formatElapsedTime(endTime - startTime);
+        saveStampData(projectName, elapsedTime, startTime, endTime);
+      }
+      stopStampTimer();
+    } else {
+      // Start timer
+      startTime = Date.now();
+      startStampTimer();
+    }
+    updateStatusBarItem();
+  });
 
-	context.subscriptions.push(disposable);
+  // Update status bar item initially
+  updateStatusBarItem();
+
+  context.subscriptions.push(workStamp);
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+  stopStampTimer();
+}
+
+function updateStatusBarItem(): void {
+  // Show formatted message tooltip
+  statusBarItem!.tooltip = formatElapsedTimeMsg(
+    startTime ? getElapsedTime(startTime) : "00:00:00"
+  );
+
+  if (isTimerRunning) {
+    statusBarItem!.text = `$(flame) ${
+      startTime ? getElapsedTime(startTime) : "00:00:00"
+    }`;
+  } else {
+    statusBarItem!.text = `$(watch) Start Stamp`;
+  }
+  statusBarItem!.show();
+}
+
+function startStampTimer(): void {
+  if (!intervalId) {
+    isTimerRunning = true;
+    intervalId = setInterval(updateStatusBarItem, 1000);
+  }
+}
+
+function stopStampTimer(): void {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+    isTimerRunning = false;
+    startTime = null;
+  }
+}
