@@ -12,6 +12,7 @@ let startTime: number | null = null;
 let statusBarItem: vscode.StatusBarItem | null = null;
 let intervalId: NodeJS.Timer | null = null;
 const cmdId: string = "work-stamp.stamp-work";
+const currentWorkspace = getCurrentWorkspaceName();
 
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -20,20 +21,29 @@ export function activate(context: vscode.ExtensionContext) {
   // Create status bar item.
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
-    100
+    80
   );
   statusBarItem.command = cmdId;
   context.subscriptions.push(statusBarItem);
+
+  // Stop timer if no workspace is active
+  if (!currentWorkspace) {
+    vscode.window.showErrorMessage(
+      "No project or workspace is open. Start the timer with an open project"
+    );
+    return;
+  } else {
+    statusBarItem.show();
+  }
 
   // Register command to start/stop timer
   const workStamp = vscode.commands.registerCommand(cmdId, () => {
     if (isTimerRunning) {
       // Save data ans stop timer
-      const projectName = getCurrentWorkspaceName();
-      if (projectName && startTime) {
+      if (currentWorkspace && startTime) {
         const endTime = Date.now();
         const elapsedTime = formatElapsedTime(endTime - startTime);
-        saveStampData(projectName, elapsedTime, startTime, endTime);
+        saveStampData(currentWorkspace, elapsedTime, startTime, endTime);
       }
       stopStampTimer();
     } else {
