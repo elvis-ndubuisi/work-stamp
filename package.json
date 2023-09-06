@@ -6,6 +6,7 @@
   "engines": {
     "vscode": "^1.81.0"
   },
+  "license": "MIT",
   "private": false,
   "categories": [
     "Other"
