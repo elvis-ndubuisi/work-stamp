@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.0
+
+### Minor Changes
+
+- displays extension command in statusBarItem
+
 ## 0.0.1 (Release Date: September 4, 2023)
 
 ### Patch Changes

@@ -2,7 +2,7 @@
   "name": "work-stamp",
   "displayName": "Work Stamp",
   "description": "Keep track of your time while working on a particular project",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.81.0"
   },
