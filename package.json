@@ -3,6 +3,9 @@
   "displayName": "Work Stamp",
   "description": "Keep track of your time while working on a particular project",
   "version": "0.1.0",
+  "author": "Elvis Ndubuisi",
+  "publisher": "ElvisNdubuisi",
+  "icon": "/assets/timer.png",
   "engines": {
     "vscode": "^1.81.0"
   },
@@ -11,6 +14,10 @@
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elvis-ndubuisi/work-stamp.git"
+  },
   "activationEvents": [
     "*"
   ],
@@ -29,7 +36,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "vsce:package": "vsce package"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",

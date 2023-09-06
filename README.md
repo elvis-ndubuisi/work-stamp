@@ -1,5 +1,5 @@
 <p align="center">
-<img src="./assets//timer.png" width="150" height="150" />
+<img src="/assets/timer.png" width="150" height="150" />
 </p>
 
 <p align="center">Keep track of your time while working on a particular project</p>
