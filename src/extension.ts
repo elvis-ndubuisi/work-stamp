@@ -2,28 +2,33 @@ import * as vscode from "vscode";
 import {
   getCurrentWorkspaceName,
   formatElapsedTime,
-  saveStampData,
   getElapsedTime,
   formatElapsedTimeMsg,
 } from "./utils";
+import { initStorePath, writeStampToCsv } from "./store";
 
 let isTimerRunning: boolean = false;
 let startTime: number | null = null;
 let statusBarItem: vscode.StatusBarItem | null = null;
 let intervalId: NodeJS.Timer | null = null;
-const cmdId: string = "work-stamp.stamp-work";
+const cmdIds = {
+  start: "work-stamp.stamp-work", // start stamp timer
+  read: "work-stamp.stamp-store", // read stamp data
+  project: "work-stamp.stamp-project", // read project stamp data
+};
 const currentWorkspace = getCurrentWorkspaceName();
 
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "work-stamp" is now active!');
+  let datastore = initStorePath();
 
   // Create status bar item.
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     80
   );
-  statusBarItem.command = cmdId;
+  statusBarItem.command = cmdIds.start;
   context.subscriptions.push(statusBarItem);
 
   // Stop timer if no workspace is active
@@ -37,13 +42,22 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   // Register command to start/stop timer
-  const workStamp = vscode.commands.registerCommand(cmdId, () => {
+  const workStamp = vscode.commands.registerCommand(cmdIds.start, () => {
     if (isTimerRunning) {
       // Save data ans stop timer
       if (currentWorkspace && startTime) {
         const endTime = Date.now();
         const elapsedTime = formatElapsedTime(endTime - startTime);
-        saveStampData(currentWorkspace, elapsedTime, startTime, endTime);
+        if (datastore) {
+          writeStampToCsv(datastore, {
+            activeDurationStamp: "00:00:00",
+            date: Date.now(),
+            endTime: endTime,
+            projectName: currentWorkspace,
+            startTime: startTime,
+            totalDurationStamp: elapsedTime,
+          });
+        }
       }
       stopStampTimer();
     } else {
@@ -53,6 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
     updateStatusBarItem();
   });
+
+  // const readStamp = vscode.commands.registerCommand(cmdIds.read, () => {});
 
   // Update status bar item initially
   updateStatusBarItem();
