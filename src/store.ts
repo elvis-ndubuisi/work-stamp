@@ -43,7 +43,9 @@ export function writeStampToCsv(datastore: string, stamp: IStamp): void {
   fs.appendFileSync(datastore, formatCsv(stamp));
 }
 
-export function readStampData(datastore: string): void {}
+export function readStampData(datastore: string): void {
+  console.log(datastore);
+}
 
 export function readAllStampData(): void {}
 
