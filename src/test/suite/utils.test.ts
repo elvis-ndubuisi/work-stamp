@@ -5,7 +5,6 @@ import {
   formatElapsedTime,
   formatElapsedTimeMsg,
   getElapsedTime,
-  saveStampData,
 } from "@/src/utils";
 
 let timeStamp: string = "00:00:00";
