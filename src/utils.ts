@@ -22,19 +22,6 @@ export function getCurrentWorkspaceName(): string | undefined {
   return activeWorkspaceName;
 }
 
-export function saveStampData(
-  projectName: string,
-  e: string,
-  s: number,
-  end: number
-): void {
-  // TODO: save data to disk
-  console.log(`${projectName} is saving...`);
-  console.log(`${s} is saving...`);
-  console.log(`${e} is saving...`);
-  console.log(`${end} is saving...`);
-}
-
 export function formatElapsedTime(milliseconds: number): string {
   const seconds = Math.floor((milliseconds / 1000) % 60);
   const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
