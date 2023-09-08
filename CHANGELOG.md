@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.2.0
+
+### Minor Changes
+
+- added stamp date storage & retrieval
+- preview logs in table using webview
+- bind webview to command : WK: Read
+
 ## 0.1.0
 
 ### Minor Changes
