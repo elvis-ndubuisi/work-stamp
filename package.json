@@ -27,6 +27,10 @@
       {
         "command": "work-stamp.stamp-work",
         "title": "WK: Start/Stop"
+      },
+      {
+        "command": "work-stamp.stamp-read",
+        "title": "WK: Read"
       }
     ]
   },
@@ -51,5 +55,8 @@
     "glob": "^10.3.3",
     "mocha": "^10.2.0",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "csv-parser": "^3.0.0"
   }
 }
