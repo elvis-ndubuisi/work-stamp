@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
+import * as csv from "csv-parser";
 
 type IStamp = {
   date: number;
@@ -34,7 +35,7 @@ export function writeStampToCsv(datastore: string, stamp: IStamp): void {
   if (!fs.existsSync(datastore)) {
     fs.writeFileSync(
       datastore,
-      "Project Name, Total Duration, Active Duration,Start Time, End Time, Date\n",
+      "projectName,totalDuration,activeDuration,startTime,endTime,date\n",
       "utf-8"
     );
   }
@@ -43,8 +44,22 @@ export function writeStampToCsv(datastore: string, stamp: IStamp): void {
   fs.appendFileSync(datastore, formatCsv(stamp));
 }
 
-export function readStampData(datastore: string): void {
-  console.log(datastore);
+export function readStampData(datastore: string): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const stampLogs: IStamp[] = [];
+
+    fs.createReadStream(datastore)
+      .pipe(csv())
+      .on("data", (log) => {
+        stampLogs.push(log);
+      })
+      .on("end", () => {
+        resolve(stampLogs);
+      })
+      .on("error", (err: any) => {
+        reject(err);
+      });
+  });
 }
 
 export function readAllStampData(): void {}

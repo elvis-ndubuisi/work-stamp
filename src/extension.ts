@@ -5,7 +5,8 @@ import {
   getElapsedTime,
   formatElapsedTimeMsg,
 } from "./utils";
-import { initStorePath, writeStampToCsv } from "./store";
+import { initStorePath, writeStampToCsv, readStampData } from "./store";
+import { genWebViewContent } from "./views";
 
 let isTimerRunning: boolean = false;
 let startTime: number | null = null;
@@ -13,7 +14,7 @@ let statusBarItem: vscode.StatusBarItem | null = null;
 let intervalId: NodeJS.Timer | null = null;
 const cmdIds = {
   start: "work-stamp.stamp-work", // start stamp timer
-  read: "work-stamp.stamp-store", // read stamp data
+  read: "work-stamp.stamp-read", // read stamp data
   project: "work-stamp.stamp-project", // read project stamp data
 };
 const currentWorkspace = getCurrentWorkspaceName();
@@ -22,6 +23,21 @@ const currentWorkspace = getCurrentWorkspaceName();
 export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "work-stamp" is now active!');
   let datastore = initStorePath();
+  let iconPath = vscode.Uri.joinPath(
+    context.extensionUri,
+    "assets",
+    "timer.png"
+  );
+  let stylePath = vscode.Uri.joinPath(
+    context.extensionUri,
+    "views",
+    "style.css"
+  );
+  const scriptPath = vscode.Uri.joinPath(
+    context.extensionUri,
+    "views",
+    "app.ts"
+  );
 
   // Create status bar item.
   statusBarItem = vscode.window.createStatusBarItem(
@@ -68,12 +84,56 @@ export function activate(context: vscode.ExtensionContext) {
     updateStatusBarItem();
   });
 
-  // const readStamp = vscode.commands.registerCommand(cmdIds.read, () => {});
+  // Register command to view timestamp logs.
+  const readStamp = vscode.commands.registerCommand(cmdIds.read, () => {
+    const panel = vscode.window.createWebviewPanel(
+      "workStamp",
+      "Work Stamp",
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(context.extensionUri, "views"),
+          vscode.Uri.joinPath(context.extensionUri, "assets"),
+        ],
+      }
+    );
+    panel.iconPath = iconPath;
+
+    // Read Log stamps.
+    if (!datastore) {
+      vscode.window.showErrorMessage("No data source found");
+      return;
+    }
+
+    readStampData(datastore)
+      .then((logs) => {
+        panel.webview.html = genWebViewContent(logs, {
+          icon: panel.webview.asWebviewUri(iconPath),
+          style: panel.webview.asWebviewUri(stylePath),
+          app: panel.webview.asWebviewUri(scriptPath),
+          cspSource: panel.webview.cspSource,
+        });
+      })
+      .catch((err) => {
+        vscode.window.showErrorMessage(err);
+      });
+  });
+
+  const readProject = vscode.commands.registerCommand(cmdIds.project, () => {
+    const panel = vscode.window.createWebviewPanel(
+      "",
+      `projectName`,
+      vscode.ViewColumn.One
+    );
+  });
 
   // Update status bar item initially
   updateStatusBarItem();
 
   context.subscriptions.push(workStamp);
+  context.subscriptions.push(readStamp);
+  context.subscriptions.push(readProject);
 }
 
 // This method is called when your extension is deactivated

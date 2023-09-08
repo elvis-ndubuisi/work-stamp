@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stamp Table</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'sha256-Rb9injxD1VMV/uzNjbZ78NhEoDuUnHcJBfN1KZ9nE7U=' 'self'; frame-src 'self'; style-src 'unsafe-inline';"
+    />
+  </head>
+  <body>
+    <h1><img src="../../assets/timer.png" alt="timer" /> Stamp Table</h1>
+
+    <section class="container">
+      <table id="stamp_table"></table>
+      <section class="pagination">
+        <button id="prev_btn">Prev</button>
+        <p id="page_count">0</p>
+        <button id="next_btn">Next</button>
+      </section>
+    </section>
+
+    <script src="./app.ts"></script>
+  </body>
+</html>

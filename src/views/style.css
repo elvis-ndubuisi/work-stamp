@@ -1,0 +1,73 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body.vscode-light {
+  color: black;
+}
+
+body.vscode-dark {
+  color: white;
+}
+
+body.vscode-high-contrast {
+  color: red;
+}
+
+code {
+  color: var(--vscode-editor-foreground);
+}
+
+.container {
+  width: 100%;
+  max-width: 920px;
+  margin: auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header h1 {
+  text-align: center;
+  font-size: 2rem;
+  text-transform: capitalize;
+}
+
+h1 {
+  color: red;
+}
+
+.header img {
+  width: 80px;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  /* border-spacing: 0; */
+}
+
+table,
+thead,
+td {
+  border: 1px solid #ddd;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
