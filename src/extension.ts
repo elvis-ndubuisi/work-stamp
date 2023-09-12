@@ -83,6 +83,17 @@ export function activate(context: vscode.ExtensionContext) {
       startStampTimer();
     }
     updateStatusBarItem();
+    updateActiveWorkTime();
+  });
+
+  // Listen for active work-time via document change
+  const checkActiveWorkTime = vscode.workspace.onDidChangeTextDocument(() => {
+    // Start the timer when coding activity begins
+    vscode.window.showInformationMessage("keystroked");
+    if (!hasStartedCoding) {
+      hasStartedCoding = true;
+      activeStartTime = Date.now();
+    }
   });
 
   // Register command to view timestamp logs.
@@ -163,6 +174,11 @@ function startStampTimer(): void {
     isTimerRunning = true;
     intervalId = setInterval(updateStatusBarItem, 1000);
   }
+
+  if (!delayIntervalId) {
+    hasStartedCoding = false;
+    delayIntervalId = setInterval(updateActiveWorkTime, 1000);
+  }
 }
 
 function stopStampTimer(): void {
@@ -171,5 +187,36 @@ function stopStampTimer(): void {
     intervalId = null;
     isTimerRunning = false;
     startTime = null;
+  }
+
+  if (delayTimerId) {
+    clearTimeout(delayTimerId);
+    delayTimerId = null;
+  }
+  if (delayIntervalId) {
+    clearInterval(delayIntervalId);
+    delayIntervalId = null;
+  }
+
+  hasStartedCoding = false;
+  activeStartTime = null;
+  activeDuration = "00:00:00";
+}
+
+function updateActiveWorkTime(): void {
+  if (hasStartedCoding && activeStartTime) {
+    const currentTime = Date.now();
+    const elapsedTime = formatElapsedTime(currentTime - activeStartTime);
+
+    // Update activeDuration - added elapsed time to previous activeDuration
+    activeDuration = joinTimeStamps(activeDuration, elapsedTime);
+
+    // Reset the activeStartTime.
+    activeStartTime = currentTime;
+
+    // Prevent further activeDuration if time of last keystroke > activeDelayTimer.
+    delayTimerId = setTimeout(() => {
+      hasStartedCoding = false;
+    }, activeDelayTime);
   }
 }
