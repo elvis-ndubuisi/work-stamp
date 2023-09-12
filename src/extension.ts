@@ -73,6 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
             startTime: startTime,
             totalDurationStamp: elapsedTime,
           });
+          vscode.window.showInformationMessage("🚀Saved timestamp🕥.");
         }
       }
       stopStampTimer();
