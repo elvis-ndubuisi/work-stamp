@@ -20,13 +20,15 @@ let delayIntervalId: NodeJS.Timer | null = null;
 let delayTimerId: NodeJS.Timeout | null = null;
 let isTimerRunning: boolean = false;
 let hasStartedCoding: boolean = false;
-let activeDelayTime: number = 4000; // 4 seconds. // TODO: review timing.
+let delayDuration: number | null = 0;
 
 const currentWorkspace = getCurrentWorkspaceName();
 const cmdIds = {
   start: "work-stamp.stamp-work", // start stamp timer
   read: "work-stamp.stamp-read", // read stamp data
   project: "work-stamp.stamp-project", // read project stamp data
+  auto: "work-stamp.autoStart", // timer auto start boolean from settings
+  delay: "work-stamp.delayDuration", // delay duration from settings
 };
 
 // Your extension is activated the very first time the command is executed
@@ -49,6 +51,12 @@ export function activate(context: vscode.ExtensionContext) {
     "views",
     "app.ts"
   );
+
+  // Read workspace configurations.
+  const config = vscode.workspace.getConfiguration();
+  const canAutoStart = config.get(cmdIds.auto, true);
+  const delayMinutes = config.get(cmdIds.delay, 4);
+  delayDuration = delayMinutes * 60 * 1000; // convert delay duration to milliseconds.
 
   // Create status bar item.
   statusBarItem = vscode.window.createStatusBarItem(
@@ -99,9 +107,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Listen for active work-time via document change
   const checkActiveWorkTime = vscode.workspace.onDidChangeTextDocument(() => {
-    // Start the timer when coding activity begins
-    vscode.window.showInformationMessage("keystroked");
+    // Check if work stamp is not running & auto-start is enabled.
+    if (!isTimerRunning && canAutoStart) {
+      startTime = Date.now();
+      startStampTimer();
+    }
+
     if (!hasStartedCoding) {
+      // Start the timer when coding activity begins - without auto start
       hasStartedCoding = true;
       activeStartTime = Date.now();
     }
@@ -246,9 +259,9 @@ function updateActiveWorkTime(): void {
     // Reset the activeStartTime.
     activeStartTime = currentTime;
 
-    // Prevent further activeDuration if time of last keystroke > activeDelayTimer.
+    // Prevent further activeDuration if time of last keystroke > delayDuration.
     delayTimerId = setTimeout(() => {
       hasStartedCoding = false;
-    }, activeDelayTime);
+    }, delayDuration!);
   }
 }
