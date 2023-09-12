@@ -43,7 +43,7 @@
         },
         "work-stamp.delayDuration": {
           "type": "number",
-          "default": 4,
+          "default": 10,
           "description": "Delay duration before active work stamp is disabled(in minutes)."
         }
       }
