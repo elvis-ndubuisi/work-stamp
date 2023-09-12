@@ -17,6 +17,7 @@ Welcome to "Work Stamp," an extension designed to help you keep track of your ti
 
 - Start and stop a timer to track your work on a particular project.
 - Display elapsed time in the status bar.
+- Preview timestamp data
 - [ ] Configurable colors to indicate the timer's running and stopped states.
 
 For example if there is an image subfolder under your extension project workspace:
