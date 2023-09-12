@@ -77,6 +77,34 @@ export function formatElapsedTimeMsg(timestamp: string): string {
   return formattedText;
 }
 
+export function joinTimeStamps(stamp1: string, stamp2: string): string {
+  // Split the timestamps into hours, minutes, and seconds
+  const [hours1, minutes1, seconds1] = stamp1.split(":").map(Number);
+  const [hours2, minutes2, seconds2] = stamp2.split(":").map(Number);
+
+  // Calculate the total seconds
+  const totalSeconds =
+    seconds1 +
+    seconds2 +
+    minutes1 * 60 +
+    minutes2 * 60 +
+    hours1 * 3600 +
+    hours2 * 3600;
+
+  // Calculate the new hours, minutes, and seconds
+  const newHours = Math.floor(totalSeconds / 3600);
+  const remainingSeconds = totalSeconds % 3600;
+  const newMinutes = Math.floor(remainingSeconds / 60);
+  const newSeconds = remainingSeconds % 60;
+
+  // Format the result as "HH:MM:SS"
+  const result = `${String(newHours).padStart(2, "0")}:${String(
+    newMinutes
+  ).padStart(2, "0")}:${String(newSeconds).padStart(2, "0")}`;
+
+  return result;
+}
+
 function padZero(num: number): string {
   return num.toString().padStart(2, "0");
 }

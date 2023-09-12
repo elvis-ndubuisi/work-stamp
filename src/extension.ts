@@ -4,25 +4,38 @@ import {
   formatElapsedTime,
   getElapsedTime,
   formatElapsedTimeMsg,
+  joinTimeStamps,
 } from "./utils";
 import { initStorePath, writeStampToCsv, readStampData } from "./store";
 import { genWebViewContent } from "./views";
 
-let isTimerRunning: boolean = false;
+let datastore: string | null = "";
+let projectName: string | undefined = "";
 let startTime: number | null = null;
+let activeStartTime: number | null = null;
+let activeDuration: string = "00:00:00";
 let statusBarItem: vscode.StatusBarItem | null = null;
 let intervalId: NodeJS.Timer | null = null;
+let delayIntervalId: NodeJS.Timer | null = null;
+let delayTimerId: NodeJS.Timeout | null = null;
+let isTimerRunning: boolean = false;
+let hasStartedCoding: boolean = false;
+let delayDuration: number | null = 0;
+
+const currentWorkspace = getCurrentWorkspaceName();
 const cmdIds = {
   start: "work-stamp.stamp-work", // start stamp timer
   read: "work-stamp.stamp-read", // read stamp data
   project: "work-stamp.stamp-project", // read project stamp data
+  auto: "work-stamp.autoStart", // timer auto start boolean from settings
+  delay: "work-stamp.delayDuration", // delay duration from settings
 };
-const currentWorkspace = getCurrentWorkspaceName();
 
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "work-stamp" is now active!');
-  let datastore = initStorePath();
+
+  datastore = initStorePath(); // Initialize stamp data storage source.
   let iconPath = vscode.Uri.joinPath(
     context.extensionUri,
     "assets",
@@ -39,40 +52,47 @@ export function activate(context: vscode.ExtensionContext) {
     "app.ts"
   );
 
+  // Read workspace configurations.
+  const config = vscode.workspace.getConfiguration();
+  const canAutoStart = config.get(cmdIds.auto, true);
+  const delayMinutes = config.get(cmdIds.delay, 4);
+  delayDuration = delayMinutes * 60 * 1000; // convert delay duration to milliseconds.
+
   // Create status bar item.
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     80
   );
   statusBarItem.command = cmdIds.start;
-  context.subscriptions.push(statusBarItem);
 
-  // Stop timer if no workspace is active
+  // Show statusBarItem if a workspace is active
   if (!currentWorkspace) {
     vscode.window.showErrorMessage(
       "No project or workspace is open. Start the timer with an open project"
     );
     return;
   } else {
+    projectName = currentWorkspace;
     statusBarItem.show();
   }
 
-  // Register command to start/stop timer
+  // Register command to start/stop timer - via statusBarItem or Command.
   const workStamp = vscode.commands.registerCommand(cmdIds.start, () => {
     if (isTimerRunning) {
-      // Save data ans stop timer
-      if (currentWorkspace && startTime) {
+      // Save data and stop timer
+      if (projectName && startTime) {
         const endTime = Date.now();
         const elapsedTime = formatElapsedTime(endTime - startTime);
         if (datastore) {
           writeStampToCsv(datastore, {
-            activeDurationStamp: "00:00:00",
+            activeDurationStamp: activeDuration ? activeDuration : "00:00:00",
             date: Date.now(),
             endTime: endTime,
-            projectName: currentWorkspace,
+            projectName: projectName,
             startTime: startTime,
             totalDurationStamp: elapsedTime,
           });
+          vscode.window.showInformationMessage("🚀Saved timestamp🕥.");
         }
       }
       stopStampTimer();
@@ -82,6 +102,22 @@ export function activate(context: vscode.ExtensionContext) {
       startStampTimer();
     }
     updateStatusBarItem();
+    updateActiveWorkTime();
+  });
+
+  // Listen for active work-time via document change
+  const checkActiveWorkTime = vscode.workspace.onDidChangeTextDocument(() => {
+    // Check if work stamp is not running & auto-start is enabled.
+    if (!isTimerRunning && canAutoStart) {
+      startTime = Date.now();
+      startStampTimer();
+    }
+
+    if (!hasStartedCoding) {
+      // Start the timer when coding activity begins - without auto start
+      hasStartedCoding = true;
+      activeStartTime = Date.now();
+    }
   });
 
   // Register command to view timestamp logs.
@@ -131,13 +167,34 @@ export function activate(context: vscode.ExtensionContext) {
   // Update status bar item initially
   updateStatusBarItem();
 
-  context.subscriptions.push(workStamp);
-  context.subscriptions.push(readStamp);
-  context.subscriptions.push(readProject);
+  // Subscription contexts.
+  context.subscriptions.push(statusBarItem);
+  context.subscriptions.push(
+    workStamp,
+    readStamp,
+    readProject,
+    checkActiveWorkTime
+  );
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {
+  // Save Stamp - (unexpected deactivation)
+  if (isTimerRunning && startTime) {
+    const endTime = Date.now();
+    const elapsedTime = formatElapsedTime(endTime - startTime);
+    if (datastore) {
+      writeStampToCsv(datastore, {
+        activeDurationStamp: activeDuration ? activeDuration : "00:00:00",
+        date: Date.now(),
+        endTime: endTime,
+        projectName: projectName!,
+        startTime: startTime,
+        totalDurationStamp: elapsedTime,
+      });
+    }
+  }
+
   stopStampTimer();
 }
 
@@ -162,6 +219,11 @@ function startStampTimer(): void {
     isTimerRunning = true;
     intervalId = setInterval(updateStatusBarItem, 1000);
   }
+
+  if (!delayIntervalId) {
+    hasStartedCoding = false;
+    delayIntervalId = setInterval(updateActiveWorkTime, 1000);
+  }
 }
 
 function stopStampTimer(): void {
@@ -170,5 +232,36 @@ function stopStampTimer(): void {
     intervalId = null;
     isTimerRunning = false;
     startTime = null;
+  }
+
+  if (delayTimerId) {
+    clearTimeout(delayTimerId);
+    delayTimerId = null;
+  }
+  if (delayIntervalId) {
+    clearInterval(delayIntervalId);
+    delayIntervalId = null;
+  }
+
+  hasStartedCoding = false;
+  activeStartTime = null;
+  activeDuration = "00:00:00";
+}
+
+function updateActiveWorkTime(): void {
+  if (hasStartedCoding && activeStartTime) {
+    const currentTime = Date.now();
+    const elapsedTime = formatElapsedTime(currentTime - activeStartTime);
+
+    // Update activeDuration - added elapsed time to previous activeDuration
+    activeDuration = joinTimeStamps(activeDuration, elapsedTime);
+
+    // Reset the activeStartTime.
+    activeStartTime = currentTime;
+
+    // Prevent further activeDuration if time of last keystroke > delayDuration.
+    delayTimerId = setTimeout(() => {
+      hasStartedCoding = false;
+    }, delayDuration!);
   }
 }

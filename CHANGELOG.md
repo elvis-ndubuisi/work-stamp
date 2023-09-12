@@ -4,9 +4,15 @@
 
 ### Minor Changes
 
-- added stamp date storage & retrieval
-- preview logs in table using webview
-- bind webview to command : WK: Read
+- Added stamp date storage & retrieval
+- Preview logs in table using webview
+- Bind webview to command : WK: Read
+- Track active work duration via typing activities
+- Automatically starts timer if auto-start config is true
+
+### Patch Changes
+
+- update extension function for new feature
 
 ## 0.1.0
 
