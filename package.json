@@ -32,7 +32,22 @@
         "command": "work-stamp.stamp-read",
         "title": "WK: Read"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "work-stamp",
+      "properties": {
+        "work-stamp.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start work stamp when typing begins"
+        },
+        "work-stamp.delayDuration": {
+          "type": "number",
+          "default": 4,
+          "description": "Delay duration before active work stamp is disabled(in minutes)."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
