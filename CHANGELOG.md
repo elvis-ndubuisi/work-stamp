@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.2.0
+
+### Minor Changes
+
+- Track active work duration via typing activities
+- Automatically starts timer if auto-start config is true
+
+### Patch Changes
+
+- update extension function for new feature
+
 ## 0.1.0
 
 ### Minor Changes
