@@ -62,9 +62,7 @@ export function readStampData(datastore: string): Promise<any[]> {
   });
 }
 
-export function readAllStampData(): void {}
-
-function formatCsv(stamp: IStamp): string {
+export function formatCsv(stamp: IStamp): string {
   const date = new Date(stamp.date).toDateString();
   const startTime = new Date(stamp.startTime).toLocaleTimeString();
   const endTime = new Date(stamp.endTime).toLocaleTimeString();
