@@ -9,21 +9,21 @@ import {
 import { initStorePath, writeStampToCsv, readStampData } from "./store";
 import { genWebViewContent } from "./views";
 
-let datastore: string | null = "";
+export let datastore: string | null = "";
 let projectName: string | undefined = "";
 let startTime: number | null = null;
 let activeStartTime: number | null = null;
 let activeDuration: string = "00:00:00";
-let statusBarItem: vscode.StatusBarItem | null = null;
+export let statusBarItem: vscode.StatusBarItem | null = null;
 let intervalId: NodeJS.Timer | null = null;
 let delayIntervalId: NodeJS.Timer | null = null;
 let delayTimerId: NodeJS.Timeout | null = null;
-let isTimerRunning: boolean = false;
+export let isTimerRunning: boolean = false;
 let hasStartedCoding: boolean = false;
 let delayDuration: number | null = 0;
 
 const currentWorkspace = getCurrentWorkspaceName();
-const cmdIds = {
+export const cmdIds = {
   start: "work-stamp.stamp-work", // start stamp timer
   read: "work-stamp.stamp-read", // read stamp data
   project: "work-stamp.stamp-project", // read project stamp data
@@ -214,7 +214,7 @@ function updateStatusBarItem(): void {
   statusBarItem!.show();
 }
 
-function startStampTimer(): void {
+export function startStampTimer(): void {
   if (!intervalId) {
     isTimerRunning = true;
     intervalId = setInterval(updateStatusBarItem, 1000);
@@ -226,7 +226,7 @@ function startStampTimer(): void {
   }
 }
 
-function stopStampTimer(): void {
+export function stopStampTimer(): void {
   if (intervalId) {
     clearInterval(intervalId);
     intervalId = null;
