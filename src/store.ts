@@ -27,6 +27,15 @@ export function initStorePath(): string | null {
   // Define file path.
   const filePath = path.join(dataFolderPath, "datastore.csv");
 
+  // Create the CSV file if it doesn't exist
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(
+      filePath,
+      "projectName,totalDuration,activeDuration,startTime,endTime,date\n",
+      "utf-8"
+    );
+  }
+
   return filePath;
 }
 

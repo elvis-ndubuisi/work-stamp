@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.2.2
+
+### Patch Changes
+
+- Update extension documentation and package file
+
+## 0.2.1
+
+### Patch Changes
+
+- Added unit tests to utility and extension functions.
+
 ## 0.2.0
 
 ### Minor Changes
