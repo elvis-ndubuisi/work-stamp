@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Added test
+- Added unit tests to utility and extension functions.
 
 ## 0.2.0
 
