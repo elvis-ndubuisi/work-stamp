@@ -27,11 +27,15 @@
     "commands": [
       {
         "command": "work-stamp.stamp-work",
-        "title": "WK: Start/Stop"
+        "title": "wk: start/stop"
       },
       {
         "command": "work-stamp.stamp-read",
-        "title": "WK: Read"
+        "title": "wk: read"
+      },
+      {
+        "command": "work-stamp.stamp-project",
+        "title": "wk: project"
       }
     ],
     "configuration": {
