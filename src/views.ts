@@ -1,77 +1,92 @@
 import * as vscode from "vscode";
 
-type ILogs = {
-  projectName: string;
+type LogsType = {
   date: string;
+  projectName: string;
   totalDuration: string;
   activeDuration: string;
   startTime: string;
   endTime: string;
 };
 
-export function genWebViewContent(
-  logs: ILogs[],
-  assets: {
-    icon?: vscode.Uri;
-    style?: vscode.Uri;
-    app?: vscode.Uri;
-    cspSource: any;
-  }
+export function getHtmlForWebView(
+  webview: vscode.Webview,
+  context: vscode.ExtensionContext,
+  logs: any,
+  projectName?: string
 ) {
-  let view = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src ${
-        assets.cspSource
-      } https:; script-src ${assets.cspSource}; style-src ${assets.cspSource};"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-    <link rel="stylesheet" href="${assets.style}">
-    <title>Stamp Table</title>
-  </head>
-  <body>
-    <header class="header">
-      <h1>Stamp Table</h1>
-    </header>
+  // Get local paths to assets, convert to special URI for webview.
+  const mainScriptPath = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "assets", "main.js")
+  );
+  const vsStylesPath = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "assets", "vscode.css")
+  );
+  const mainStylesPath = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "assets", "main.css")
+  );
 
-    <section class="container">
-      <table id="stamp_table">
-        <thead>
-        <td>Date</td>
-        <td>Project Name</td>
-        <td>Active Duration</td>
-        <td>Total Duration</td>
-        <td>Start Time</td>
-        <td>End Time</td>
-        </thead>
-        ${genTableBody(logs)}
-      </table>
-      <section class="pagination">
-        <button id="prev_btn">Prev</button>
-        <p id="page_count">0</p>
-        <button id="next_btn">Next</button>
+  return `<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Work Stamp Logs</title>
+      <link rel="stylesheet" href="${mainStylesPath}" />
+      <link rel="stylesheet" href="${vsStylesPath}" />
+      <meta
+        http-equiv="Content-Security-Policy"
+        content="default-src 'none'; img-src ${
+          webview.cspSource
+        } https script-src ${webview.cspSource}; frame-src 'self'; style-src ${
+    webview.cspSource
+  };"
+      />
+    </head>
+    <body>
+      <h1 class="heading">Heading</h1>
+      <section class="table_container">
+        <table>
+          <thead>
+            <td>Date</td>
+            <td>Project Name</td>
+            <td>Duration</td>
+            <td>Active</td>
+            <td>Start Time</td>
+            <td>End Time</td>
+          </thead>
+          <tbody>${spreadLogs(logs, projectName && projectName)}</tbody>
+        </table>
       </section>
-    </section>
-  </body>
-</html>`;
-
-  return view;
+      <script src="${mainScriptPath}"></script>
+    </body>
+  </html>`;
 }
 
-function genTableBody(logs: ILogs[]): string {
-  return `<tbody>${logs.map((log) => {
+function spreadLogs(logs: LogsType[], filter?: string): string | null {
+  const html = logs.map((log) => {
+    if (filter) {
+      if (filter === log.projectName) {
+        return `<tr>
+          <td>${log.date}</td>
+          <td>${log.projectName}</td>
+          <td>${log.totalDuration}</td>
+          <td>${log.activeDuration}</td>
+          <td>${log.startTime}</td>
+          <td>${log.endTime}</td>
+        </tr>`;
+      } else {
+        throw Error("Project not found");
+      }
+    }
     return `<tr>
-      <td>${log["date"]}</td>
-      <td>${log["projectName"]}</td>
-      <td>${log["activeDuration"]}</td>
-      <td>${log["totalDuration"]}</td>
-      <td>${log["startTime"]}</td>
-      <td>${log["endTime"]}</td>
-  </tr>`;
-  })}</tbody>`;
+      <td>${log.date}</td>
+      <td>${log.projectName}</td>
+      <td>${log.totalDuration}</td>
+      <td>${log.activeDuration}</td>
+      <td>${log.startTime}</td>
+      <td>${log.endTime}</td>
+    </tr>`;
+  });
+  return `${html}`;
 }
-// ${genTableBody(logs)}
