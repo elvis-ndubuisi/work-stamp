@@ -27,6 +27,8 @@ export const cmdIds = {
   start: "work-stamp.stamp-work", // start stamp timer
   read: "work-stamp.stamp-read", // read stamp data
   project: "work-stamp.stamp-project", // read project stamp data
+};
+const settingIds = {
   auto: "work-stamp.autoStart", // timer auto start boolean from settings
   delay: "work-stamp.delayDuration", // delay duration from settings
 };
@@ -41,21 +43,11 @@ export function activate(context: vscode.ExtensionContext) {
     "assets",
     "timer.png"
   );
-  let stylePath = vscode.Uri.joinPath(
-    context.extensionUri,
-    "views",
-    "style.css"
-  );
-  const scriptPath = vscode.Uri.joinPath(
-    context.extensionUri,
-    "views",
-    "app.ts"
-  );
 
   // Read workspace configurations.
   const config = vscode.workspace.getConfiguration();
-  const canAutoStart = config.get(cmdIds.auto, true);
-  const delayMinutes = config.get(cmdIds.delay, 4);
+  const canAutoStart = config.get(settingIds.auto, true);
+  const delayMinutes = config.get(settingIds.delay, 4);
   delayDuration = delayMinutes * 60 * 1000; // convert delay duration to milliseconds.
 
   // Create status bar item.
