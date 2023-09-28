@@ -9,10 +9,12 @@ type LogsType = {
   endTime: string;
 };
 
+let spliceIndex = 10;
+
 export function getHtmlForWebView(
   webview: vscode.Webview,
   context: vscode.ExtensionContext,
-  logs: any,
+  logs: LogsType[],
   projectName?: string
 ) {
   // Get local paths to assets, convert to special URI for webview.
@@ -38,13 +40,14 @@ export function getHtmlForWebView(
         http-equiv="Content-Security-Policy"
         content="default-src 'none'; img-src ${
           webview.cspSource
-        } https script-src ${webview.cspSource}; frame-src 'self'; style-src ${
+        } https:; script-src ${
     webview.cspSource
-  };"
+  }; frame-src 'self'; style-src ${webview.cspSource};"
       />
     </head>
     <body>
       <h1 class="heading">Heading</h1>
+      <section class="summary_report">Summary</section>
       <section class="table_container">
         <table>
           <thead>
@@ -58,12 +61,25 @@ export function getHtmlForWebView(
           <tbody>${spreadLogs(logs, projectName && projectName)}</tbody>
         </table>
       </section>
+      <section class="footer">
+        <button class="btn" id="prev" type="button" disabled>Prev Logs</button>
+        <p id="page">1</p>
+        <button class="btn" id="next" type="button">Next Logs</button>
+      </section>
       <script src="${mainScriptPath}"></script>
     </body>
   </html>`;
 }
 
 function spreadLogs(logs: LogsType[], filter?: string): string | null {
+  logs.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+
+    // Compare the dates in reverse order to get the most recent logs first
+    return dateB.getTime() - dateA.getTime();
+  });
+
   const html = logs.map((log) => {
     if (filter) {
       if (filter === log.projectName) {

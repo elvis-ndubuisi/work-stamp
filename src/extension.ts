@@ -7,7 +7,7 @@ import {
   joinTimeStamps,
 } from "./utils";
 import { initStorePath, writeStampToCsv, readStampData } from "./store";
-import { genWebViewContent } from "./views";
+import { getHtmlForWebView } from "./views";
 
 export let datastore: string | null = "";
 let projectName: string | undefined = "";
@@ -43,6 +43,8 @@ export function activate(context: vscode.ExtensionContext) {
     "assets",
     "timer.png"
   );
+  let activeWebView: vscode.WebviewPanel | undefined = undefined;
+  let projectWebView: vscode.WebviewPanel | undefined = undefined;
 
   // Read workspace configurations.
   const config = vscode.workspace.getConfiguration();
@@ -112,61 +114,145 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  // Register command to view timestamp logs.
-  const readStamp = vscode.commands.registerCommand(cmdIds.read, () => {
-    const panel = vscode.window.createWebviewPanel(
-      "workStamp",
-      "Work Stamp",
-      vscode.ViewColumn.One,
-      {
-        enableScripts: true,
-        localResourceRoots: [
-          vscode.Uri.joinPath(context.extensionUri, "views"),
-          vscode.Uri.joinPath(context.extensionUri, "assets"),
-        ],
+  // Register command to view timestamp logs in webview.
+  const readStamps = vscode.commands.registerCommand(cmdIds.read, () => {
+    // Allow only a single webview
+    if (activeWebView) {
+      activeWebView.reveal(vscode.ViewColumn.One);
+    } else {
+      activeWebView = vscode.window.createWebviewPanel(
+        "workStamp",
+        "Work Stamp",
+        vscode.ViewColumn.One,
+        {
+          enableScripts: true,
+          localResourceRoots: [
+            vscode.Uri.joinPath(context.extensionUri, "assets"),
+          ],
+        }
+      );
+
+      // Set Panel Configs
+      activeWebView.iconPath = iconPath;
+
+      // Process Log stamps into webview.
+      if (!datastore) {
+        vscode.window.showInformationMessage("No data saved yet!");
+        return;
       }
-    );
-    panel.iconPath = iconPath;
-
-    // Read Log stamps.
-    if (!datastore) {
-      vscode.window.showErrorMessage("No data source found");
-      return;
-    }
-
-    readStampData(datastore)
-      .then((logs) => {
-        panel.webview.html = genWebViewContent(logs, {
-          icon: panel.webview.asWebviewUri(iconPath),
-          style: panel.webview.asWebviewUri(stylePath),
-          app: panel.webview.asWebviewUri(scriptPath),
-          cspSource: panel.webview.cspSource,
+      readStampData(datastore)
+        .then((logs) => {
+          activeWebView!.webview.html = getHtmlForWebView(
+            activeWebView!.webview,
+            context,
+            logs
+          );
+        })
+        .catch((err) => {
+          // TODO: refactor.
+          vscode.window.showErrorMessage("Error: ", err);
         });
-      })
-      .catch((err) => {
-        vscode.window.showErrorMessage(err);
-      });
+
+      /** Handles webview message events */
+      // activeWebView.webview.postMessage();
+      // activeWebView.webview.onDidReceiveMessage((message) => {});
+    }
   });
 
-  const readProject = vscode.commands.registerCommand(cmdIds.project, () => {
-    const panel = vscode.window.createWebviewPanel(
-      "",
-      `projectName`,
-      vscode.ViewColumn.One
-    );
-  });
+  // Register command to view a project's timestamp summary
+  const projectStamps = vscode.commands.registerCommand(
+    cmdIds.project,
+    async () => {
+      const projectName = await vscode.window.showInputBox({
+        placeHolder: "project name",
+        prompt: "Type the project name to get project timestamp logs",
+        value: "",
+      });
+
+      // Allow only a single webview
+      if (projectWebView) {
+        projectWebView.reveal(vscode.ViewColumn.One);
+
+        // Process Log stamps into webview.
+        if (!datastore) {
+          vscode.window.showInformationMessage("No data saved yet!");
+          return;
+        }
+
+        // Read data from datastore
+        readStampData(datastore)
+          .then((logs) => {
+            projectWebView!.webview.html = getHtmlForWebView(
+              projectWebView!.webview,
+              context,
+              logs,
+              projectName
+            );
+          })
+          .catch((err) => {
+            // TODO: refactor.
+            vscode.window.showErrorMessage("Error: ", err);
+          });
+      } else {
+        projectWebView = vscode.window.createWebviewPanel(
+          "workStamp",
+          "Project Work Stamp",
+          vscode.ViewColumn.One,
+          {
+            enableScripts: true,
+            localResourceRoots: [
+              vscode.Uri.joinPath(context.extensionUri, "assets"),
+            ],
+          }
+        );
+
+        // Set Panel Configs
+        projectWebView.iconPath = iconPath;
+
+        // Process Log stamps into webview.
+        if (!datastore) {
+          vscode.window.showInformationMessage("No data saved yet!");
+          return;
+        }
+
+        // Read data from datastore
+        readStampData(datastore)
+          .then((logs) => {
+            projectWebView!.webview.html = getHtmlForWebView(
+              projectWebView!.webview,
+              context,
+              logs,
+              projectName
+            );
+          })
+          .catch((err) => {
+            // TODO: refactor.
+            vscode.window.showErrorMessage("Error: ", err);
+          });
+
+        // projectWebView.onDidDispose(
+        //   () => {
+        //     projectWebView = undefined;
+        //   },
+        //   undefined,
+        //   context.subscriptions
+        // );
+      }
+    }
+  );
 
   // Update status bar item initially
   updateStatusBarItem();
 
+  // Message
+  // context.subscriptions.push(vscode.commands.registerCommand())
+
   // Subscription contexts.
+  context.subscriptions.push(workStamp);
   context.subscriptions.push(statusBarItem);
-  context.subscriptions.push(
-    workStamp,
-    readStamp,
-    readProject,
-    checkActiveWorkTime
-  );
+  context.subscriptions.push(checkActiveWorkTime);
+  context.subscriptions.push(readStamps);
+  context.subscriptions.push(projectStamps);
 }
 
 // This method is called when your extension is deactivated
